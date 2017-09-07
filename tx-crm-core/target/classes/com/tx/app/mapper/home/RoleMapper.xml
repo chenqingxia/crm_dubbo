@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tx.app.mapper.home.RoleMapper">
+
+    <sql id="columns">
+        id,
+        name,
+        description
+    </sql>
+
+    <sql id="roleColumns">
+        r1.id AS id,
+        r1.name AS name,
+        r1.description AS description,
+        GROUP_CONCAT(r3.name) AS rights
+    </sql>
+
+    <select id="selectRoles" parameterType="com.tx.app.form.home.RoleForm" resultType="com.tx.app.service.RoleDto">
+        <bind name="bind_name" value="_parameter.getName() + '%'" />
+        <bind name="bind_description" value="_parameter.getDescription() + '%'" />
+        SELECT r.*
+        FROM
+            (
+                SELECT <include refid="roleColumns" />
+                FROM txcrm_role r1,txcrm_role_right r2,txcrm_right r3
+                <where>
+                    <if test="name != null and name != '' ">AND r1.name LIKE #{bind_name}</if>
+                    <if test="description != null and description != '' ">AND r1.description LIKE #{bind_description}</if>
+                    AND r1.id = r2.role_id
+                    AND r2.rights_id = r3.id
+                </where>
+                GROUP BY r1.id, r1.name, r1.description
+                ORDER BY ${sortInfo}
+            ) r limit  #{iDisplayStart}, #{iDisplayLength}
+    </select>
+
+    <select id="countRoles" parameterType="com.tx.app.form.home.RoleForm" resultType="int">
+        <bind name="bind_name" value="_parameter.getName() + '%'" />
+        <bind name="bind_description" value="_parameter.getDescription() + '%'" />
+        SELECT COUNT(1) FROM txcrm_role
+        <where>
+            <if test="name != null and name != '' ">AND name LIKE #{bind_name}</if>
+            <if test="description != null and description != '' ">AND description LIKE #{bind_description}</if>
+        </where>
+    </select>
+
+    <select id="selectById" parameterType="int" resultType="com.tx.app.dao.home.Role">
+        SELECT <include refid="columns" />
+        FROM txcrm_role
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByName" parameterType="String" resultType="com.tx.app.dao.home.Role">
+        SELECT <include refid="columns" />
+        FROM txcrm_role
+        WHERE name = #{_parameter}
+    </select>
+
+    <select id="selectAll" resultType="com.tx.app.dao.home.Role">
+        SELECT <include refid="columns" />
+        FROM txcrm_role
+    </select>
+
+    <insert id="insert" parameterType="com.tx.app.dao.home.Role">
+        INSERT INTO txcrm_role (name,description) VALUES (#{name}, #{description})
+    </insert>
+
+    <update id="update" parameterType="com.tx.app.dao.home.Role">
+        UPDATE txcrm_role
+        <set>
+            <if test="name != null and name != ''">name=#{name},</if>
+            <if test="description != null and description != ''">description=#{description}</if>
+        </set>
+        <where>
+            <if test="id != null">AND id = #{id}</if>
+        </where>
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM txcrm_role WHERE id IN
+        <foreach item="id" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectRoleId" parameterType="String" resultType="int">
+          select id from txcrm_role where name
+    </select>
+
+</mapper>
+

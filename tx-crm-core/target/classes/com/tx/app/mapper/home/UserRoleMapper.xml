@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tx.app.mapper.home.UserRoleMapper">
+
+    <sql id="columns">
+        id,
+        user_id AS "userId",
+        role_id AS "roleId"
+    </sql>
+
+    <insert id="insert" parameterType="com.tx.app.dao.home.UserRole">
+        INSERT INTO txcrm_user_role(user_id,role_id) VALUES ( #{userId}, #{roleId})
+    </insert>
+
+    <delete id="deleteByUserId" parameterType="int">
+        DELETE FROM txcrm_user_role WHERE user_id = #{userId}
+    </delete>
+
+    <select id="selectByRoleId" parameterType="int" resultType="com.tx.app.dao.home.UserRole">
+        SELECT <include refid="columns" />
+        FROM  txcrm_user_role
+        <where>
+            <if test="_parameter != null ">role_id = #{_parameter}</if>
+        </where>
+    </select>
+
+</mapper>
+

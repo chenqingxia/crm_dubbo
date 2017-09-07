@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tx.app.mapper.home.UserMapper">
+
+    <sql id="columns">
+        id,
+        no,
+        name,
+        email,
+        mobile,
+        description,
+        last_ip AS "lastIp",
+        last_time AS "lastTime",
+        locked
+    </sql>
+
+    <sql id="userColumns">
+        u.id AS "userId",
+        u.no AS "userNo0",
+        u.name AS "userName",
+        ro.id AS "roleId",
+        ri.id AS "rightsId",
+        ri.url
+    </sql>
+
+    <select id="selectByNo" parameterType="String" resultType="com.tx.app.dao.home.User">
+        SELECT <include refid="columns"/>
+        FROM txcrm_user
+        WHERE no= #{_parameter}
+    </select>
+
+    <insert id="insert" parameterType="com.tx.app.dao.home.User">
+        INSERT INTO txcrm_user (no,name,email,mobile,description,last_ip,last_time)
+        VALUES ( #{no}, #{name}, #{email,jdbcType=VARCHAR}, #{mobile,jdbcType=VARCHAR}, #{description,jdbcType=VARCHAR}, #{lastIp}, #{lastTime})
+    </insert>
+
+    <update id="update" parameterType="com.tx.app.dao.home.User">
+        UPDATE crius_user
+        <set>
+            <if test="no != null and no != ''">no=#{no},</if>
+            <if test="name != null and name != ''">name=#{name},</if>
+            <if test="email != null and email != ''">email=#{email},</if>
+            <if test="mobile != null and mobile != ''">mobile=#{mobile},</if>
+            <if test="description != null and description != ''">description=#{description},</if>
+            <if test="lastIp != null and lastIp != ''">last_ip=#{lastIp},</if>
+            <if test="lastTime != null and lastTime != ''">last_time=#{lastTime},</if>
+            <if test="locked != null">locked=#{locked}</if>
+        </set>
+        <where>
+            id=#{id}
+        </where>
+    </update>
+
+    <select id="selectAll" resultType="com.tx.app.dao.home.User">
+        SELECT <include refid="columns" />
+        FROM txcrm_user
+    </select>
+
+    <delete id="delete">
+       DELETE FROM crius_user WHERE id = #{id}
+    </delete>
+
+    <select id="selectRoleAndRightsByNo" parameterType="String" resultType="com.tx.app.service.UserDto">
+        SELECT <include refid="userColumns" />
+        FROM txcrm_user u,
+        txcrm_user_role ur,
+        txcrm_role ro,
+        txcrm_role_right rr,
+        txcrm_right ri
+        WHERE u.id = ur.user_id
+              AND ur.role_id = ro.id
+              AND ro.id = rr.role_id
+              AND rr.rights_id = ri.id
+              AND u.no = #{_parameter}
+    </select>
+
+</mapper>
+

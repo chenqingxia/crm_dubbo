@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+    <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径 -->
+    <contextName>admin</contextName>
+    <property scope="context" name="CHARSET" value="UTF-8" />
+
+    <property scope="context" name="appName" value="txcrm" />
+    <property scope="context" name="LOG_HOME" value="/txlogs" />
+    <property scope="context" name="SRV_LOG_HOME" value="${LOG_HOME}/${appName}/srv" />
+    <property scope="context" name="INF_LOG_HOME" value="${LOG_HOME}/${appName}/inf" />
+    <property scope="context" name="APP_LOG_HOME" value="${LOG_HOME}/${appName}/app" />
+    <property scope="context" name="ERR_LOG_HOME" value="${LOG_HOME}/${appName}/err" />
+    <property scope="context" name="SRV_LOG_TABLE_NAME" value="txcrm_user_srv_log" />
+    <property scope="context" name="INF_LOG_TABLE_NAME" value="txcrm_intf_log" />
+    <property scope="context" name="APP_LOG_TABLE_NAME" value="txcrm_system_log" />
+    <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
+    <property scope="context" name="SRV_PATTERN" value='%m%n' />
+    <property scope="context" name="APP_PATTERN" value='%d{yyyy-MM-dd HH:mm:ss.SSS}|%level|%M|%C\:%L|%thread|%replace(%.-2000msg){"(\r|\n)","\t"}|%replace(%.-2000ex{full}){"(\r|\n)",""}%nopex%n' />
+    <property scope="context" name="INF_PATTERN" value='|%d{yyyy-MM-dd HH:mm:ss}|%d{SSS}|%m%n' />
+    <property scope="context" name="ERR_PATTERN" value='%d{yyyy-MM-dd HH:mm:ss.SSS}|%-5level|%logger{35} - %msg|"%ex{full}"%n' />
+    <!-- ERROR日志文件 -->
+    <appender name="ERR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 只记录warn及以上级别的日志 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <file>${ERR_LOG_HOME}/err.${HOSTNAME}.ing</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--日志文件输出的文件名，按天生成文件名 -->
+            <fileNamePattern>${ERR_LOG_HOME}/err.${HOSTNAME}.%d{yyyy-MM-dd}.log.%i.zip</fileNamePattern>
+            <MaxHistory>60</MaxHistory><!--日志文件保留天数 -->
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- 按时间回滚的同时，按文件大小来回滚 -->
+                <maxFileSize>30MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>${CHARSET}</charset>
+            <pattern>${ERR_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 接口日志文件 -->
+    <appender name="INF_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${INF_LOG_HOME}/inf.${HOSTNAME}.ing</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${INF_LOG_HOME}/${INF_LOG_TABLE_NAME}.${HOSTNAME}.%d{yyyy-MM-dd_HHmm}.log.%i</fileNamePattern>
+            <MaxHistory>1440</MaxHistory><!--日志文件保存个数 -->
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- 按时间回滚的同时，按文件大小来回滚 -->
+                <maxFileSize>30MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>${CHARSET}</charset>
+            <pattern>${INF_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- SRV日志文件 -->
+    <appender name="SRV_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${SRV_LOG_HOME}/srv.${HOSTNAME}.ing</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${SRV_LOG_HOME}/${SRV_LOG_TABLE_NAME}.${HOSTNAME}.%d{yyyy-MM-dd_HH}.log.%i
+            </fileNamePattern>
+            <MaxHistory>48</MaxHistory><!--日志文件保留小时，按照小时回滚 -->
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- 按时间回滚的同时，按文件大小来回滚 -->
+                <maxFileSize>600MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>${CHARSET}</charset>
+            <pattern>${SRV_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 开发者日志文件 -->
+    <appender name="APP_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${APP_LOG_HOME}/app.${HOSTNAME}.ing</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--日志文件输出的文件名 -->
+            <fileNamePattern>${APP_LOG_HOME}/${APP_LOG_TABLE_NAME}.${HOSTNAME}.%d{yyyy-MM-dd_HH}.log.%i
+            </fileNamePattern>
+            <MaxHistory>48</MaxHistory><!--日志文件保留小时，按照小时回滚 -->
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- 按时间回滚的同时，按文件大小来回滚 -->
+                <maxFileSize>600MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>${CHARSET}</charset>
+            <pattern>${APP_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 控制台输出 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 只记录warn及以上级别的日志 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <charset>${CHARSET}</charset>
+            <pattern>${APP_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 根据日志规范约定输出 -->
+    <root level="DEBUG">
+        <appender-ref ref="ERR_FILE" />
+        <appender-ref ref="STDOUT" />
+    </root>
+    <logger name="intflog" level="INFO">
+        <appender-ref ref="INF_FILE" />
+    </logger>
+    <logger name="txcrm_srv_log" level="INFO">
+        <appender-ref ref="SRV_FILE" />
+    </logger>
+    <logger name="com.txcrm" level="INFO">
+        <appender-ref ref="APP_FILE" />
+    </logger>
+    <logger name="org.springframework.core" level="INFO"/>
+    <logger name="org.springframework.beans" level="INFO"/>
+    <logger name="org.springframework.context" level="INFO"/>
+    <logger name="org.springframework.web" level="DEBUG"/>
+    <logger name="com.tx.app.persistence" level="DEBUG"/>
+</configuration>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.tx.app.mapper.home.RightsMapper">
+
+    <sql id="columns">
+        id,
+        parent_id AS parentId,
+        name,
+        url,
+        description
+    </sql>
+
+    <sql id="rightsColumns">
+        id,
+        parent_id AS parentId,
+        name,
+        url,
+        description,
+        level
+    </sql>
+    <sql id="rights1">
+     select id,parent_id AS "parentId",name,url,description,1 as level
+     from txcrm_right where parent_id='-1'
+    </sql>
+    <sql id="rights2">
+     select id,parent_id AS "parentId",name,url,description,2 as level from wccp.txcrm_right
+     where parent_id in (select id from txcrm_right where parent_id='-1')
+    </sql>
+    <sql id="rights3">
+     select id,parent_id AS "parentId",name,url,description,3 as level from wccp.txcrm_right
+     where parent_id in (select id from txcrm_right where parent_id in
+     (select id from txcrm_right where parent_id='-1'))
+    </sql>
+
+    <select id="selectRights" parameterType="com.tx.app.form.home.RightsForm" resultType="com.tx.app.service.RightsDto">
+        <bind name="bind_name" value="_parameter.getName() + '%'" />
+        <bind name="bind_description" value="_parameter.getDescription() + '%'" />
+
+           (<include refid="rights1"/>) union (<include refid="rights2"/>) union (<include refid="rights3"/>)
+            <where>
+                <if test="name != null and name != ''">name LIKE #{bind_name}</if>
+                <if test="description != null and description != ''">AND description LIKE #{bind_description}</if>
+            </where>
+            ORDER BY ${sortInfo}
+            limit  #{iDisplayStart}, #{iDisplayLength}
+    </select>
+
+    <select id="countRights" parameterType="com.tx.app.form.home.RightsForm" resultType="int">
+        <bind name="bind_name" value="_parameter.getName() + '%'" />
+        <bind name="bind_description" value="_parameter.getDescription() + '%'" />
+        SELECT COUNT(1) FROM txcrm_right
+        <where>
+            <if test="name != null and name != ''">name LIKE #{bind_name}</if>
+            <if test="description != null and description != ''">AND description LIKE #{bind_description}</if>
+        </where>
+    </select>
+
+    <select id="selectById" parameterType="int" resultType="com.tx.app.dao.home.Rights">
+        SELECT <include refid="columns" />
+        FROM txcrm_right
+        WHERE id = #{_parameter}
+    </select>
+
+    <select id="selectByName" parameterType="String" resultType="com.tx.app.dao.home.Rights">
+        SELECT <include refid="columns" />
+        FROM txcrm_right
+        WHERE name = #{_parameter}
+    </select>
+
+    <insert id="insert" parameterType="com.tx.app.dao.home.Rights">
+        INSERT INTO txcrm_right(parent_id,name,url,description) VALUES ( #{parentId}, #{name}, #{url}, #{description})
+    </insert>
+
+    <update id="update" parameterType="com.tx.app.dao.home.Rights">
+        UPDATE txcrm_right
+        <set>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="name != null and name != '' ">name = #{name},</if>
+            <if test="url != null and url != '' ">url = #{url},</if>
+            <if test="description != null and description != '' ">description = #{description}</if>
+        </set>
+        <where>
+            <if test="id != null">id = #{id}</if>
+        </where>
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM txcrm_right WHERE id IN
+        <foreach item="id" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectAllByParentId" parameterType="int" resultType="com.tx.app.service.RightsDto">
+        (<include refid="rights1"/>) union (<include refid="rights2"/>) union (<include refid="rights3"/>)
+    </select>
+
+    <select id="selectByParentId" parameterType="int" resultType="com.tx.app.service.RightsDto">
+        SELECT <include refid="columns" />
+        FROM txcrm_right
+        WHERE parent_id = #{_parameter}
+    </select>
+</mapper>
+
